@@ -180,14 +180,15 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
         or exit # protect against invalid $argv
 
         # Space and other command terminators expands abbrs _and_ inserts itself.
-        bind --preset $argv " " self-insert expand-abbr
-        bind --preset $argv ";" self-insert expand-abbr
-        bind --preset $argv "|" self-insert expand-abbr
-        bind --preset $argv "&" self-insert expand-abbr
-        bind --preset $argv ">" self-insert expand-abbr
-        bind --preset $argv "<" self-insert expand-abbr
+        # FYI, can self-insert before expand-abbr w/ ' ' only (IIAC due to cursor backtrack), the rest must have self-insert last.
+        bind --preset $argv " " expand-abbr self-insert
+        bind --preset $argv ";" expand-abbr self-insert
+        bind --preset $argv "|" expand-abbr self-insert
+        bind --preset $argv "&" expand-abbr self-insert
+        bind --preset $argv ">" expand-abbr self-insert
+        bind --preset $argv "<" expand-abbr self-insert
         # Closing a command substitution expands abbreviations
-        bind --preset $argv ")" self-insert expand-abbr
+        bind --preset $argv ")" expand-abbr self-insert
         # Ctrl-space inserts space without expanding abbrs
         bind --preset $argv -k nul 'test -n "$(commandline)" && commandline -i " "'
         # Shift-space (CSI u escape sequence) behaves like space because it's easy to mistype.
