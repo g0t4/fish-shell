@@ -180,8 +180,10 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
         or exit # protect against invalid $argv
 
         # Space and other command terminators expands abbrs _and_ inserts itself.
-        # FYI, can self-insert before expand-abbr w/ ' ' only (IIAC due to cursor backtrack), the rest must have self-insert last.
-        bind --preset $argv " " expand-abbr self-insert
+        # issue: ok so a few considerations:
+        #   self-insert last is required to get ;|&<>) bindings to work below (else won't expand if expand-abbr is last)
+        #   BUT, when using abbr that sets cursor position (inside the abbr) then self-insert after causes issues. For now, I may propose a stopgap to have ' ' only self-insert first so abbr's with set cursor position can work... and then the rest I can't imagine it's often I use them so lets have them be broken for non-set-position abbrs b/c both won't work with self-insert before or after:
+        bind --preset $argv " " self-insert expand-abbr
         bind --preset $argv ";" expand-abbr self-insert
         bind --preset $argv "|" expand-abbr self-insert
         bind --preset $argv "&" expand-abbr self-insert
