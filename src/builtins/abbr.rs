@@ -47,12 +47,16 @@ impl Options {
         };
 
         if cmds.len() > 1 {
-            streams.err.append(wgettext_fmt!(
-                "%ls: Cannot combine options %ls\n",
-                CMD,
-                join(&cmds, L!(", "))
-            ));
-            return false;
+            if self.query && self.show {
+                // hack to allow lookups
+            } else {
+                streams.err.append(wgettext_fmt!(
+                    "%ls: Cannot combine options %ls\n",
+                    CMD,
+                    join(&cmds, L!(", "))
+                ));
+                return false;
+            }
         }
 
         // If run with no options, treat it like --add if we have arguments,
@@ -124,13 +128,29 @@ fn join(list: &[&wstr], sep: &wstr) -> WString {
 }
 
 // Print abbreviations in a fish-script friendly way.
-fn abbr_show(streams: &mut IoStreams) -> BuiltinResult {
+fn abbr_show(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
     let style = EscapeStringStyle::Script(Default::default());
 
     abbrs::with_abbrs(|abbrs| {
         let mut result = WString::new();
         for abbr in abbrs.list() {
             result.clear();
+
+            if opts.query {
+                // inefficiency is trivial for a small # of lookups
+                // not intended to lookup giant batches
+                let mut queried = false;
+                for arg in opts.args.iter() {
+                    if abbr.name == *arg {
+                        queried = true;
+                        break;
+                    }
+                }
+                if !queried {
+                    continue;
+                }
+            }
+
             let mut add_arg = |arg: &wstr| {
                 if !result.is_empty() && !result.ends_with("=") {
                     result.push_str(" ");
@@ -594,7 +614,7 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
         return abbr_add(&opts, streams);
     };
     if opts.show {
-        return abbr_show(streams);
+        return abbr_show(&opts, streams);
     };
     if opts.list {
         return abbr_list(&opts, streams);
